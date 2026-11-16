@@ -1,0 +1,22 @@
+{
+  "manifest_version": 2.0,
+  "id": "fortigate-logs",
+  "name": "FortiGate Logs",
+  "version": "1.0.0",
+  "namespace": "FortigateLogs",
+  "description": "Pesquisa e visualiza os logs do FortiGate recebidos pelo APM.",
+  "actions": {
+    "fortigate.logs": {
+      "class": "FortiGateLogs",
+      "view": "fortigate.logs"
+    },
+    "fortigate.traffic": {
+      "class": "FortiGateTrafficLogs",
+      "view": "fortigate.logs"
+    },
+    "fortigate.system": {
+      "class": "FortiGateSystemLogs",
+      "view": "fortigate.logs"
+    }
+  }
+}
