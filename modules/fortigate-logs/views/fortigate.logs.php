@@ -316,21 +316,22 @@ $details_panel = (new CDiv())
 	->setAttribute('hidden', 'hidden')
 	->addItem((new CDiv())
 		->addClass('fgt-log-panel')
+		->addClass('overlay-dialogue')
 		->addItem((new CDiv([
 			new CTag('strong', true, _('Log details')),
 			(new CButtonIcon(ZBX_ICON_CLOSE))
 				->setId('fgt-log-close')
 				->setAttribute('aria-label', _('Close'))
 				->setAttribute('title', _('Close'))
-		]))->addClass('fgt-log-panel-header'))
+		]))->addClass('fgt-log-panel-header')->addClass('overlay-dialogue-header'))
 		->addItem((new CDiv())->setId('fgt-log-groups')->addClass('fgt-log-groups')));
 $page->addItem($details_panel);
 
 $page->addItem(new CTag('style', true, '
 	.fgt-log-overlay[hidden] { display: none; }
 	.fgt-log-overlay:not([hidden]) { position: fixed; inset: 0; z-index: 1200; display: flex; justify-content: flex-end; background: rgba(0,0,0,.38); }
-	.fgt-log-panel { box-sizing: border-box; width: min(580px, 92vw); height: 100%; overflow-y: auto; padding: 16px; background: var(--body-bg-color, #292929); color: var(--font-color, #eee); box-shadow: -4px 0 16px rgba(0,0,0,.35); }
-	.fgt-log-panel-header { display: flex; align-items: center; justify-content: space-between; position: sticky; top: -16px; z-index: 1; padding: 12px 0; background: var(--body-bg-color, #292929); border-bottom: 1px solid rgba(128,128,128,.3); }
+	.fgt-log-panel { position: relative; box-sizing: border-box; width: min(580px, 92vw); height: 100%; overflow-y: auto; padding: 16px; }
+	.fgt-log-panel-header { display: flex; align-items: center; justify-content: space-between; position: sticky; top: -16px; z-index: 1; padding: 12px 0; }
 	#fgt-log-close { box-sizing: border-box; width: 32px; min-width: 32px; height: 32px; padding: 0; }
 	#fgt-log-close::before { display: inline-block; width: 12px; height: 12px; font-size: 12px !important; line-height: 12px; }
 	.fgt-log-section { border-bottom: 1px solid rgba(128,128,128,.25); }
