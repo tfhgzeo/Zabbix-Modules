@@ -86,6 +86,7 @@ $table_headers = $is_system ? [
 		_('Source / interface'), _('Destination'), _('Service'), _('Event details')
 	];
 $table = (new CTableInfo($is_system ? _('No FortiGate system logs found for this period.') : _('No FortiGate traffic logs found for this period.')))
+	->setId('fgt-logs-table')
 	->setHeader($table_headers);
 
 $pager_url = (new CUrl('zabbix.php'))
@@ -104,6 +105,7 @@ $pager_url = (new CUrl('zabbix.php'))
 	->setArgument('search', $data['search']);
 $page_logs = $data['logs'];
 $paging = CPagerHelper::paginate($data['page'], $page_logs, ZBX_SORT_DOWN, $pager_url);
+$page_logs = array_values($page_logs);
 
 $detail_records = [];
 foreach ($page_logs as $log_index => $log) {
@@ -379,9 +381,10 @@ zbx_add_post_js('timeControl.processObjects();');
 
 $log_details_js = '(function() {
 	const records = '.zbx_jsvalue($detail_records).';
+	const table = document.getElementById("fgt-logs-table");
 	const overlay = document.getElementById("fgt-log-overlay");
 	const closeButton = document.getElementById("fgt-log-close");
-	if (!overlay || !closeButton) return;
+	if (!table || !overlay || !closeButton) return;
 
 	const fillPairs = function(container, entries) {
 		container.replaceChildren();
@@ -434,17 +437,17 @@ $log_details_js = '(function() {
 			overlay.hidden = false;
 			closeButton.focus();
 	};
-	document.querySelectorAll(".fgt-log-row").forEach(function(row) {
-		row.addEventListener("click", function(event) {
-			if (event.target.closest("a, button")) return;
+	table.addEventListener("click", function(event) {
+		const row = event.target.closest("tr.fgt-log-row");
+		if (!row || event.target.closest("a, button")) return;
+		openRecord(row.dataset.logIndex);
+	});
+	table.addEventListener("keydown", function(event) {
+		const row = event.target.closest("tr.fgt-log-row");
+		if (row && (event.key === "Enter" || event.key === " ")) {
+			event.preventDefault();
 			openRecord(row.dataset.logIndex);
-		});
-		row.addEventListener("keydown", function(event) {
-			if (event.key === "Enter" || event.key === " ") {
-				event.preventDefault();
-				openRecord(row.dataset.logIndex);
-			}
-		});
+		}
 	});
 
 	const close = function() { overlay.hidden = true; };
