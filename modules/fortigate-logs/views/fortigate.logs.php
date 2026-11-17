@@ -88,8 +88,25 @@ $table_headers = $is_system ? [
 $table = (new CTableInfo($is_system ? _('No FortiGate system logs found for this period.') : _('No FortiGate traffic logs found for this period.')))
 	->setHeader($table_headers);
 
+$pager_url = (new CUrl('zabbix.php'))
+	->setArgument('action', $action_name)
+	->setArgument('from', $data['timeline']['from'])
+	->setArgument('to', $data['timeline']['to'])
+	->setArgument('profileIdx', $data['timeline']['profileIdx'])
+	->setArgument('profileIdx2', $data['timeline']['profileIdx2'])
+	->setArgument('host', $data['host'])
+	->setArgument('serial', $data['serial'])
+	->setArgument('service', $data['service'])
+	->setArgument('destination', $data['destination'])
+	->setArgument('source', $data['source'])
+	->setArgument('log_action', $data['action'])
+	->setArgument('severity', $data['severity'])
+	->setArgument('search', $data['search']);
+$page_logs = $data['logs'];
+$paging = CPagerHelper::paginate($data['page'], $page_logs, ZBX_SORT_DOWN, $pager_url);
+
 $detail_records = [];
-foreach ($data['logs'] as $log_index => $log) {
+foreach ($page_logs as $log_index => $log) {
 	$fields = $log['fields'];
 	// FortiGate eventtime is epoch nanoseconds. Fall back to the OpenTelemetry
 	// timestamp, then let Zabbix format it in the current user's time zone.
@@ -338,58 +355,8 @@ if (!empty($data['error'])) {
 if (!empty($data['host_lookup_error'])) {
 	$page->addItem(new CWarning(_('Could not look up FortiGate hosts. Check host read permissions for this Zabbix user.')));
 }
-if (empty($data['error'])) {
-	$page->addItem(new CDiv(sprintf(
-		_('Showing %1$s of %2$s matching records.'),
-		count($data['logs']),
-		$data['total']
-	)));
-}
-
 $page->addItem($table);
-
-if ($data['page'] > 1 || count($data['logs']) === $data['page_size']) {
-	$pagination = (new CTag('nav', true))->addClass('paging-btn-container');
-	if ($data['page'] > 1) {
-		$previous_url = (new CUrl('zabbix.php'))
-			->setArgument('action', $action_name)
-			->setArgument('from', $data['timeline']['from'])
-			->setArgument('to', $data['timeline']['to'])
-			->setArgument('profileIdx', $data['timeline']['profileIdx'])
-			->setArgument('profileIdx2', $data['timeline']['profileIdx2'])
-			->setArgument('host', $data['host'])
-			->setArgument('serial', $data['serial'])
-			->setArgument('service', $data['service'])
-			->setArgument('destination', $data['destination'])
-			->setArgument('source', $data['source'])
-			->setArgument('log_action', $data['action'])
-			->setArgument('severity', $data['severity'])
-			->setArgument('search', $data['search'])
-			->setArgument('page', $data['page'] - 1)
-			->getUrl();
-		$pagination->addItem((new CLink(_('Previous'), $previous_url))->addClass('button'));
-	}
-	if ($data['page'] * $data['page_size'] < $data['total']) {
-		$next_url = (new CUrl('zabbix.php'))
-			->setArgument('action', $action_name)
-			->setArgument('from', $data['timeline']['from'])
-			->setArgument('to', $data['timeline']['to'])
-			->setArgument('profileIdx', $data['timeline']['profileIdx'])
-			->setArgument('profileIdx2', $data['timeline']['profileIdx2'])
-			->setArgument('host', $data['host'])
-			->setArgument('serial', $data['serial'])
-			->setArgument('service', $data['service'])
-			->setArgument('destination', $data['destination'])
-			->setArgument('source', $data['source'])
-			->setArgument('log_action', $data['action'])
-			->setArgument('severity', $data['severity'])
-			->setArgument('search', $data['search'])
-			->setArgument('page', $data['page'] + 1)
-			->getUrl();
-		$pagination->addItem((new CLink(_('Next'), $next_url))->addClass('button'));
-	}
-	$page->addItem($pagination);
-}
+$page->addItem($paging);
 
 // Register the native Zabbix time selector so its quick-range controls update
 // the page and submit the selected from/to interval.

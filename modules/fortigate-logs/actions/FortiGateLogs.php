@@ -9,7 +9,6 @@ use API,
 	CRangeTimeParser;
 
 class FortiGateLogs extends CController {
-	private const PAGE_SIZE = 100;
 	private const FETCH_LIMIT = 5000;
 	private const SEVERITY_CATEGORIES = ['unspecified', 'trace', 'debug', 'info', 'warning', 'error', 'fatal'];
 
@@ -74,7 +73,6 @@ class FortiGateLogs extends CController {
 				'severity' => [],
 				'search' => '',
 				'page' => 1,
-				'page_size' => self::PAGE_SIZE,
 				'total' => 0,
 				'host_lookup_error' => false
 			]));
@@ -234,7 +232,6 @@ class FortiGateLogs extends CController {
 			];
 		}
 		$total = count($rows);
-		$rows = array_slice($rows, ($page - 1) * self::PAGE_SIZE, self::PAGE_SIZE);
 
 		$this->setResponse(new CControllerResponseData([
 			'logs' => $rows,
@@ -252,7 +249,6 @@ class FortiGateLogs extends CController {
 			'severity' => $severity,
 			'search' => $search,
 			'page' => $page,
-			'page_size' => self::PAGE_SIZE,
 			'total' => $total,
 			'fetch_limit' => self::FETCH_LIMIT,
 			'host_lookup_error' => $host_lookup_error
