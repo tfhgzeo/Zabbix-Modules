@@ -80,11 +80,14 @@ $filter = (new CFilter())
 	->addVar('action', $action_name);
 
 $table_headers = $is_system ? [
-		_('Time'), _('FortiGate host'), _('FortiGate serial'), _('Severity'), _('Event'), _('Interface'), _('Event details')
+		_('Time'), _('FortiGate host'), _('FortiGate serial'), _('Severity'), _('Event'), _('Message'), _('Event details')
 	] : [
 		_('Time'), _('FortiGate host'), _('FortiGate serial'), _('Severity'), _('Type / subtype'), _('Action / event'),
 		_('Source / interface'), _('Destination'), _('Service'), _('Event details')
 	];
+$column_keys = $is_system
+	? ['time', 'host', 'serial', 'severity', 'event', 'message', 'details']
+	: ['time', 'host', 'serial', 'severity', 'type', 'action', 'source', 'destination', 'service', 'details'];
 $table = (new CTableInfo($is_system ? _('No FortiGate system logs found for this period.') : _('No FortiGate traffic logs found for this period.')))
 	->setId('fgt-logs-table')
 	->setHeader($table_headers);
@@ -285,7 +288,7 @@ foreach ($page_logs as $log_index => $log) {
 		$fortigate_serial,
 		$severity_badge,
 		$fields['logdesc'] ?? $type,
-		$interface !== '' ? $interface : '—',
+		$message !== '' ? $message : '—',
 		$event_details !== '' ? $event_details : '—'
 	] : [
 		$time,
@@ -309,6 +312,13 @@ foreach ($page_logs as $log_index => $log) {
 
 $page = (new CHtmlPage())->setTitle($is_system ? _('FortiGate system logs') : _('FortiGate traffic logs'));
 $page->addItem((new CDiv($filter))->setId('fortigate_logs'));
+$page->addItem((new CDiv([
+	(new CButtonIcon(ZBX_ICON_COG_FILLED))
+		->setId('fgt-columns-button')
+		->setAttribute('aria-label', _('Customize table columns'))
+		->setAttribute('title', _('Customize table columns')),
+	(new CDiv())->setId('fgt-columns-menu')->addClass('fgt-columns-menu')->addClass('overlay-dialogue')->setAttribute('hidden', 'hidden')
+]))->addClass('fgt-table-toolbar'));
 
 $details_panel = (new CDiv())
 	->setId('fgt-log-overlay')
@@ -340,6 +350,29 @@ $page->addItem(new CTag('style', true, '
 	.fgt-log-group-body { padding: 8px 6px; }
 	.fgt-log-row { cursor: pointer; }
 	.fgt-log-row:hover { background: rgba(128,128,128,.12); }
+	.fgt-table-toolbar { display: flex; justify-content: center; position: relative; width: 30px; height: 100%; }
+	#fgt-columns-button { box-sizing: border-box; width: 30px; min-width: 30px; height: 30px; padding: 0; border: 0; border-radius: 0; background: transparent; }
+	#fgt-columns-button:hover, #fgt-columns-button.is-active { background: rgba(128,128,128,.2); }
+	#fgt-columns-button .zi-cog-filled { display: none; }
+	#fgt-columns-button::before { content: ""; display: block; width: 14px; height: 14px; margin: auto; background: radial-gradient(circle at 2px 4px, #6f9da8 0 2px, transparent 2.5px), radial-gradient(circle at 7px 9px, #6f9da8 0 2px, transparent 2.5px), radial-gradient(circle at 12px 5px, #6f9da8 0 2px, transparent 2.5px), linear-gradient(#899194, #899194) 1.5px 1px / 1px 12px no-repeat, linear-gradient(#899194, #899194) 6.5px 1px / 1px 12px no-repeat, linear-gradient(#899194, #899194) 11.5px 1px / 1px 12px no-repeat; }
+	.fgt-columns-menu { position: fixed; top: 0; left: 0; right: auto; z-index: 1201; box-sizing: border-box; width: 208px; max-height: min(70vh, 520px); overflow: auto; padding: 10px; }
+	.fgt-columns-menu[hidden] { display: none; }
+	.fgt-columns-menu:not([hidden]) { display: block; }
+	.fgt-columns-title { margin: 2px 0 8px; font-weight: 600; }
+	.fgt-columns-option { display: flex; min-height: 30px; gap: 7px; align-items: center; padding: 0 5px; cursor: grab; }
+	.fgt-columns-option:hover, .fgt-columns-option.fgt-column-dragging { background: rgba(128,128,128,.16); }
+	.fgt-columns-grip { width: 13px; flex: 0 0 13px; color: #6f9da8; font-size: 16px; line-height: 1; cursor: grab; }
+	.fgt-columns-option input { margin: 0; }
+	.fgt-columns-option-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+	.fgt-columns-menu .fgt-columns-reset { width: 100%; margin-top: 10px; padding: 4px 8px; border: 1px solid currentColor; border-radius: 3px; background: transparent; color: inherit; text-align: left; }
+	.fgt-columns-menu .fgt-columns-reset:hover { background: rgba(128,128,128,.16); }
+	#fgt-logs-table th { position: relative; }
+	#fgt-logs-table { width: 100%; table-layout: fixed; }
+	#fgt-logs-table th.fgt-column-tools, #fgt-logs-table td.fgt-column-tools { width: 30px; min-width: 30px; max-width: 30px; padding: 0; }
+	#fgt-logs-table td { overflow-wrap: anywhere; }
+	#fgt-logs-table th.fgt-column-draggable { cursor: grab; }
+	#fgt-logs-table th.fgt-column-dragging { opacity: .45; }
+	.fgt-column-resizer { position: absolute; top: 0; right: -2px; z-index: 2; width: 5px; height: 100%; cursor: col-resize; touch-action: none; }
 	.fgt-apm-severity { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: .9em; font-weight: 600; line-height: 1.4; white-space: nowrap; }
 	.fgt-apm-severity-unspecified, .fgt-apm-severity-trace, .fgt-apm-severity-debug { background: #667085; color: #fff; }
 	.fgt-apm-severity-info { background: #2f80c9; color: #fff; }
@@ -457,5 +490,243 @@ $log_details_js = '(function() {
 	document.addEventListener("keydown", function(event) { if (event.key === "Escape" && !overlay.hidden) close(); });
 })();';
 zbx_add_post_js($log_details_js);
+
+$table_layout_js = '(function() {
+	const table = document.getElementById("fgt-logs-table");
+	const button = document.getElementById("fgt-columns-button");
+	const menu = document.getElementById("fgt-columns-menu");
+	if (!table || !button || !menu) return;
+	document.body.append(menu);
+	const positionMenu = function() {
+		if (menu.hidden) return;
+		const rect = button.getBoundingClientRect();
+		const menuWidth = menu.getBoundingClientRect().width || 208;
+		const left = Math.max(8, Math.min(rect.right - menuWidth, window.innerWidth - menuWidth - 8));
+		const menuHeight = menu.getBoundingClientRect().height;
+		const top = rect.bottom + menuHeight > window.innerHeight - 8
+			? Math.max(8, rect.top - menuHeight)
+			: rect.bottom;
+		menu.style.left = left + "px";
+		menu.style.top = top + "px";
+	};
+
+	const keys = '.zbx_jsvalue($column_keys).';
+	const storageKey = "zabbix.fortigate.columns." + '.zbx_jsvalue($action_name).';
+	const head = table.tHead && table.tHead.rows[0];
+	if (!head) return;
+	const headerByKey = {};
+	const cellsByKey = {};
+	const headers = Array.from(head.cells);
+	const rows = Array.from(table.querySelectorAll("tbody tr.fgt-log-row"));
+	keys.forEach(function(key, index) {
+		headerByKey[key] = headers[index];
+		cellsByKey[key] = rows.map(function(row) { return row.cells[index]; });
+		headerByKey[key].classList.add("fgt-column-draggable");
+		headerByKey[key].setAttribute("draggable", "true");
+	});
+	const toolsHeader = document.createElement("th");
+	toolsHeader.className = "fgt-column-tools";
+	toolsHeader.setAttribute("aria-label", '.zbx_jsvalue(_('Table settings')).');
+	head.append(toolsHeader);
+	const toolsCells = rows.map(function(row) {
+		const cell = document.createElement("td");
+		cell.className = "fgt-column-tools";
+		row.append(cell);
+		return cell;
+	});
+	toolsHeader.append(button.parentElement);
+
+	let state = {order: keys.slice(), hidden: [], widths: {}};
+	try {
+		const saved = JSON.parse(localStorage.getItem(storageKey) || "null");
+		if (saved && Array.isArray(saved.order)) {
+			const savedOrder = saved.order.filter(function(key) { return keys.includes(key); });
+			state.order = savedOrder.concat(keys.filter(function(key) { return !savedOrder.includes(key); }));
+			state.hidden = Array.isArray(saved.hidden) ? saved.hidden.filter(function(key) { return keys.includes(key); }) : [];
+			state.widths = saved.widths && typeof saved.widths === "object" ? saved.widths : {};
+		}
+	}
+	catch (error) {}
+
+	const colgroup = document.createElement("colgroup");
+	const colByKey = {};
+	keys.forEach(function(key) {
+		const col = document.createElement("col");
+		col.dataset.columnKey = key;
+		colByKey[key] = col;
+		colgroup.append(col);
+	});
+	const toolsCol = document.createElement("col");
+	toolsCol.style.width = "30px";
+	colgroup.append(toolsCol);
+	table.insertBefore(colgroup, table.firstChild);
+
+	const save = function() {
+		try { localStorage.setItem(storageKey, JSON.stringify(state)); }
+		catch (error) {}
+	};
+	const updateEmptyState = function() {
+		const emptyCell = table.querySelector("tbody td[colspan]");
+		if (emptyCell) emptyCell.colSpan = state.order.filter(function(key) { return !state.hidden.includes(key); }).length + 1;
+	};
+	const applyState = function() {
+		state.order.forEach(function(key) {
+			head.append(headerByKey[key]);
+			colgroup.append(colByKey[key]);
+			cellsByKey[key].forEach(function(cell) {
+				if (cell) cell.parentElement.append(cell);
+			});
+		});
+		head.append(toolsHeader);
+		toolsCells.forEach(function(cell) { cell.parentElement.append(cell); });
+		colgroup.append(toolsCol);
+		state.order.forEach(function(key) {
+			const hidden = state.hidden.includes(key);
+			headerByKey[key].hidden = hidden;
+			colByKey[key].hidden = hidden;
+			cellsByKey[key].forEach(function(cell) { if (cell) cell.hidden = hidden; });
+			if (state.widths[key]) colByKey[key].style.width = state.widths[key] + "px";
+		});
+		updateEmptyState();
+	};
+
+	const renderMenu = function() {
+		menu.replaceChildren();
+		menu.hidden = false;
+		const title = document.createElement("div");
+		title.className = "fgt-columns-title";
+		title.textContent = '.zbx_jsvalue(_('Column list')).';
+		menu.append(title);
+		state.order.forEach(function(key) {
+			const option = document.createElement("div");
+			option.className = "fgt-columns-option";
+			option.draggable = true;
+			option.dataset.columnKey = key;
+			const grip = document.createElement("span");
+			grip.className = "fgt-columns-grip";
+			grip.textContent = "⠿";
+			grip.setAttribute("aria-hidden", "true");
+			const checkbox = document.createElement("input");
+			checkbox.type = "checkbox";
+			checkbox.setAttribute("aria-label", headerByKey[key].textContent.trim());
+			checkbox.checked = !state.hidden.includes(key);
+			checkbox.addEventListener("change", function() {
+				state.hidden = checkbox.checked
+					? state.hidden.filter(function(item) { return item !== key; })
+					: state.hidden.concat([key]);
+				applyState();
+				save();
+			});
+			const text = document.createElement("span");
+			text.className = "fgt-columns-option-text";
+			text.textContent = headerByKey[key].textContent.trim();
+			option.append(grip, checkbox, text);
+			option.addEventListener("dragstart", function(event) {
+				draggedKey = key;
+				option.classList.add("fgt-column-dragging");
+				event.dataTransfer.effectAllowed = "move";
+				event.dataTransfer.setData("text/plain", key);
+			});
+			option.addEventListener("dragend", function() { option.classList.remove("fgt-column-dragging"); });
+			option.addEventListener("dragover", function(event) { event.preventDefault(); });
+			option.addEventListener("drop", function(event) {
+				event.preventDefault();
+				const moving = draggedKey || event.dataTransfer.getData("text/plain");
+				if (!moving || moving === key) return;
+				const oldIndex = state.order.indexOf(moving);
+				let targetIndex = state.order.indexOf(key);
+				const after = event.clientY > option.getBoundingClientRect().top + option.getBoundingClientRect().height / 2;
+				state.order.splice(oldIndex, 1);
+				if (oldIndex < targetIndex) targetIndex--;
+				state.order.splice(targetIndex + (after ? 1 : 0), 0, moving);
+				applyState();
+				save();
+				renderMenu();
+			});
+			menu.append(option);
+		});
+		const reset = document.createElement("button");
+		reset.type = "button";
+		reset.className = "button fgt-columns-reset";
+		reset.textContent = '.zbx_jsvalue(_('Reset to default')).';
+		reset.addEventListener("click", function() {
+			state = {order: keys.slice(), hidden: [], widths: {}};
+			applyState();
+			save();
+			renderMenu();
+		});
+		menu.append(reset);
+		positionMenu();
+	};
+
+	button.addEventListener("click", function(event) {
+		event.stopPropagation();
+		if (menu.hidden) renderMenu(); else menu.hidden = true;
+		button.classList.toggle("is-active", !menu.hidden);
+	});
+	window.addEventListener("resize", positionMenu);
+	window.addEventListener("scroll", positionMenu, true);
+	document.addEventListener("click", function(event) {
+		if (!menu.contains(event.target) && !button.contains(event.target)) {
+			menu.hidden = true;
+			button.classList.remove("is-active");
+		}
+	});
+
+	let draggedKey = null;
+	keys.forEach(function(key) {
+		const header = headerByKey[key];
+		header.addEventListener("dragstart", function(event) {
+			draggedKey = key;
+			header.classList.add("fgt-column-dragging");
+			event.dataTransfer.effectAllowed = "move";
+			event.dataTransfer.setData("text/plain", key);
+		});
+		header.addEventListener("dragend", function() {
+			header.classList.remove("fgt-column-dragging");
+		});
+		header.addEventListener("dragover", function(event) { event.preventDefault(); });
+		header.addEventListener("drop", function(event) {
+			event.preventDefault();
+			const moving = draggedKey || event.dataTransfer.getData("text/plain");
+			if (!moving || moving === key) return;
+			const oldIndex = state.order.indexOf(moving);
+			let newIndex = state.order.indexOf(key);
+			const insertAfter = event.clientX > header.getBoundingClientRect().left + header.getBoundingClientRect().width / 2;
+			state.order.splice(oldIndex, 1);
+			if (oldIndex < newIndex) newIndex--;
+			state.order.splice(newIndex + (insertAfter ? 1 : 0), 0, moving);
+			applyState();
+			save();
+			if (!menu.hidden) renderMenu();
+		});
+
+		const resizer = document.createElement("span");
+		resizer.className = "fgt-column-resizer";
+		resizer.setAttribute("aria-hidden", "true");
+		header.append(resizer);
+		resizer.addEventListener("pointerdown", function(event) {
+			event.preventDefault();
+			event.stopPropagation();
+			const startX = event.clientX;
+			const startWidth = header.getBoundingClientRect().width;
+			const move = function(moveEvent) {
+				const width = Math.max(70, Math.round(startWidth + moveEvent.clientX - startX));
+				state.widths[key] = width;
+				colByKey[key].style.width = width + "px";
+			};
+			const end = function() {
+				window.removeEventListener("pointermove", move);
+				window.removeEventListener("pointerup", end);
+				save();
+			};
+			window.addEventListener("pointermove", move);
+			window.addEventListener("pointerup", end);
+		});
+		resizer.addEventListener("dragstart", function(event) { event.preventDefault(); });
+	});
+	applyState();
+})();';
+zbx_add_post_js($table_layout_js);
 
 $page->show();
