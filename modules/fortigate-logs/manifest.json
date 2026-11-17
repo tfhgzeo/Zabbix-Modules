@@ -4,6 +4,8 @@
   "name": "FortiGate Logs",
   "version": "1.0.0",
   "namespace": "FortigateLogs",
+  "author": "gmoreira",
+  "url": "https://github.com/tfhgzeo/Zabbix-Modules",
   "description": "Pesquisa e visualiza os logs do FortiGate recebidos pelo APM.",
   "actions": {
     "fortigate.logs": {
