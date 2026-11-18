@@ -16,7 +16,7 @@ O módulo apresenta logs que contenham `devid`, `serial` ou `serial_number` no c
 
 ## Instalação
 
-1. Copie a pasta `fortigate-logs` para o diretório de módulos do frontend. Exemplo:
+1. Copie a pasta `fortigate-logs` para o diretório de módulos configurado no frontend. O caminho padrão em muitas instalações é:
 
    ```text
    /usr/share/zabbix/modules/fortigate-logs
@@ -26,7 +26,16 @@ O módulo apresenta logs que contenham `devid`, `serial` ou `serial_number` no c
 3. Clique em **Scan directory** e habilite **FortiGate Logs**.
 4. Recarregue a página do Zabbix. O menu **Analyzer** aparecerá com as telas **Traffic Logs** e **Event System Logs**.
 
-Para uma instalação Docker, monte o diretório do módulo como volume persistente no serviço do frontend. Se o volume estiver como somente leitura, atualize os arquivos no diretório de origem do bind mount; copiar para dentro do container não funcionará.
+Para uma instalação Docker, adicione um bind mount ao serviço do frontend existente no Compose. Exemplo de trecho para incorporar à configuração do serviço (o nome do serviço pode variar):
+
+```yaml
+services:
+  zabbix-web:
+    volumes:
+      - ./modules/fortigate-logs:/usr/share/zabbix/modules/fortigate-logs:ro
+```
+
+O caminho antes dos dois-pontos é relativo ao diretório do projeto Compose e deve apontar para a pasta do módulo. O caminho depois dos dois-pontos deve corresponder ao diretório de módulos do frontend dentro do container. Se o volume for somente leitura, atualize os arquivos no diretório de origem do bind mount; não copie para dentro do container.
 
 ## Associar logs a hosts do Zabbix
 
