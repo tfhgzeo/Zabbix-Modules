@@ -37,6 +37,7 @@ class FortiGateLogs extends CController {
 			'service' => 'string',
 			'destination' => 'string',
 			'source' => 'string',
+			'event' => 'string',
 			'log_action' => 'string',
 			'severity' => 'array',
 			'search' => 'string',
@@ -69,6 +70,7 @@ class FortiGateLogs extends CController {
 				'service' => '',
 				'destination' => '',
 				'source' => '',
+				'event' => '',
 				'action' => '',
 				'severity' => [],
 				'search' => '',
@@ -94,6 +96,7 @@ class FortiGateLogs extends CController {
 		$service = trim($this->getInput('service', ''));
 		$destination = trim($this->getInput('destination', ''));
 		$source = trim($this->getInput('source', ''));
+		$event = trim($this->getInput('event', ''));
 		$action = trim($this->getInput('log_action', ''));
 		$severity = $this->getInput('severity', []);
 		$search = trim($this->getInput('search', ''));
@@ -195,9 +198,15 @@ class FortiGateLogs extends CController {
 			])) {
 				continue;
 			}
-			if ($source !== '' && !$this->matchesAny($source, [
+			if ($is_traffic && $source !== '' && !$this->matchesAny($source, [
 				$fields['srcip'] ?? '', $fields['srcport'] ?? '', $fields['srcintf'] ?? '', $fields['interface'] ?? ''
 			])) {
+				continue;
+			}
+			$event_column_value = (string) ($fields['logdesc'] ?? trim(
+				($fields['type'] ?? '').' / '.($fields['subtype'] ?? ''), ' /'
+			));
+			if (!$is_traffic && $event !== '' && !$this->matchesAny($event, [$event_column_value])) {
 				continue;
 			}
 			if ($is_traffic && $action !== '' && !$this->matchesAny($action, [$fields['action'] ?? ''])) {
@@ -245,6 +254,7 @@ class FortiGateLogs extends CController {
 			'service' => $service,
 			'destination' => $destination,
 			'source' => $source,
+			'event' => $event,
 			'action' => $action,
 			'severity' => $severity,
 			'search' => $search,

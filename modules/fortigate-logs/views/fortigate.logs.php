@@ -39,13 +39,21 @@ if (!$is_system) {
 }
 
 $filter_right = (new CFormGrid())
-	->addClass(CFormGrid::ZBX_STYLE_FORM_GRID_LABEL_WIDTH_TRUE)
-	->addItem([
+	->addClass(CFormGrid::ZBX_STYLE_FORM_GRID_LABEL_WIDTH_TRUE);
+if ($is_system) {
+	$filter_right->addItem([
+		new CLabel(_('Event'), 'event'),
+		new CFormField(new CTextBox('event', $data['event'], false, 128))
+	]);
+}
+else {
+	$filter_right->addItem([
 		new CLabel(_('Source'), 'source'),
 		new CFormField((new CTextBox('source', $data['source'], false, 64))
-			->setAttribute('placeholder', $is_system ? _('IP address or interface') : _('IP address or port')))
-	])
-	->addItem([
+			->setAttribute('placeholder', _('IP address or port')))
+	]);
+}
+$filter_right->addItem([
 		new CLabel(_('Severity'), 'severity'),
 		new CFormField((new CCheckBoxList('severity'))
 			->setOptions($severity_options)
@@ -103,6 +111,7 @@ $pager_url = (new CUrl('zabbix.php'))
 	->setArgument('service', $data['service'])
 	->setArgument('destination', $data['destination'])
 	->setArgument('source', $data['source'])
+	->setArgument('event', $data['event'] ?? '')
 	->setArgument('log_action', $data['action'])
 	->setArgument('severity', $data['severity'])
 	->setArgument('search', $data['search']);
