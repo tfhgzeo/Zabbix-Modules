@@ -2,6 +2,9 @@
 
 Módulo de frontend para pesquisar e analisar logs FortiGate recebidos pelo APM do Zabbix. Ele usa a sessão e as permissões do usuário conectado e consulta os registros pela API `apmlog.get`. O módulo não acessa o ClickHouse diretamente nem armazena credenciais.
 
+- **Autor:** gmoreira
+- **GitHub:** [tfhgzeo/Zabbix-Modules](https://github.com/tfhgzeo/Zabbix-Modules)
+
 ## Requisitos
 
 - Zabbix 8.0 com suporte a APM habilitado.
@@ -42,13 +45,17 @@ Ao clicar no nome do host, o Zabbix abre o menu contextual padrão do host.
 
 ### Traffic Logs
 
-Mostra registros `type=traffic`, incluindo origem, destino, serviço, ação, política e resumo do evento. Filtros disponíveis: host, serial, serviço, destino, origem, severidade, ação, texto e período.
+Mostra registros `type=traffic`, incluindo origem, destino, serviço, ação, política e resumo do evento. Filtros disponíveis: host, grupo de hosts, serviço, destino, origem, severidade, ação, texto e período.
 
 ### Event System Logs
 
-Mostra registros `type=event` e `subtype=system`, incluindo interface, descrição do evento e campos presentes, como `total`, `used`, `user` e `reason`. Filtros disponíveis: host, serial, interface/origem, severidade, texto e período.
+Mostra registros `type=event` e `subtype=system`, incluindo interface, descrição do evento e campos presentes, como `total`, `used`, `user` e `reason`. Filtros disponíveis: host, grupo de hosts, **Event**, severidade, texto e período. O filtro **Event** pesquisa somente o valor da coluna **Event**: a descrição (`logdesc`) ou, quando ela não existe, o tipo/subtipo. O filtro **Contains** continua pesquisando o conteúdo do log.
 
 As duas telas usam o seletor nativo de período do Zabbix. A tabela exibe a severidade como badge e abre os detalhes ao clicar em qualquer parte da linha.
+
+### Personalização das colunas
+
+Use o botão de engrenagem acima da tabela para exibir ou ocultar colunas e restaurar a disposição inicial. Arraste o cabeçalho de uma coluna para reordená-la e arraste sua borda direita para ajustar a largura. A configuração é salva no armazenamento local do navegador e separada entre **Traffic Logs** e **Event System Logs**; ela não é sincronizada entre navegadores ou dispositivos.
 
 ## Detalhes do log
 
